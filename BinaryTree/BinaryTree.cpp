@@ -92,10 +92,10 @@ void _BINARYTREENODE_<T>::levelOrder()
 
 template<typename T>
 //为什么用const char*代替string就不对呢？主要是在比较t->element和parameter1这两个字符串时会出错,不管是==还是strcmp都会错
-string test(_BINARYTREENODE_<T>* t,string parameter1){
+const char* test(_BINARYTREENODE_<T>* t,const char* parameter1){
     if(t == nullptr)
         return "wrong parameter!";
-    if(test(t->leftChild,parameter1)==parameter1 || t->element==parameter1 || test(t->rightChild,parameter1)==parameter1)
+    if(test(t->leftChild,parameter1)==parameter1 || strcmp(t->element,parameter1)==0 || test(t->rightChild,parameter1)==parameter1)
         return parameter1;
     else
         return "wrong parameter!";
@@ -104,10 +104,10 @@ string test(_BINARYTREENODE_<T>* t,string parameter1){
 
 int main(){
 
-    _BINARYTREENODE_<string>*t2=new _BINARYTREENODE_<string>("rightChild");
-    _BINARYTREENODE_<string>*t4=new _BINARYTREENODE_<string>("test");
-    _BINARYTREENODE_<string>*t1=new _BINARYTREENODE_<string>("leftChild",t4,nullptr);
-    _BINARYTREENODE_<string>*t3=new _BINARYTREENODE_<string>("+",t1,t2);
+    _BINARYTREENODE_<const char*>*t2=new _BINARYTREENODE_<const char*>("rightChild");
+    _BINARYTREENODE_<const char*>*t4=new _BINARYTREENODE_<const char*>("test");
+    _BINARYTREENODE_<const char*>*t1=new _BINARYTREENODE_<const char*>("leftChild",t4,nullptr);
+    _BINARYTREENODE_<const char*>*t3=new _BINARYTREENODE_<const char*>("+",t1,t2);
     char* String=new char[MAX];
     cin>>String;
     if(test(t3,String)==String){
