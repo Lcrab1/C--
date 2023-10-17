@@ -1,10 +1,18 @@
 #include<iostream>
 #include<tchar.h>
 #include "max.h"
+#include<string>
 using namespace std;
 int main(){
-    cout<<"Hello,World!"<<endl;
-    cout<<"你好，世界!"<<endl;
-    cout<<Max(10,20)<<endl;
-    system("pause");
+   const char* s1="hello";
+   const char* s2="hello";
+   if(*s2==*s1)
+   cout<<"1"<<endl;
+   else
+   cout<<"0"<<endl;
+   if(strcmp(s1,s2)==0)
+   cout<<"1"<<endl;
+   else
+   cout<<"0"<<endl;
+   system("pause");
 }
