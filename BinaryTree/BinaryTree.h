@@ -7,6 +7,7 @@ struct _BINARYTREENODE_
     T element;
     _BINARYTREENODE_<T>* leftChild;
     _BINARYTREENODE_<T>* rightChild;
+    bool flag=false;
     //空实现
     _BINARYTREENODE_();
     //给element赋值
@@ -27,4 +28,16 @@ struct _BINARYTREENODE_
     void infix();
     //层次遍历
     void levelOrder();
+    //按值查找
+    const char* searchWithValue(const char* parameter1);
+    //求深度
+    int deep();
+    //输出叶子结点
+    void printLeaf();
+    //非递归前序遍历
+    void preOrderWithoutR();
+    //非递归中序遍历
+    void inOrderWithoutR();
+    //非递归后序遍历
+    void postOrderWithoutR();
 };

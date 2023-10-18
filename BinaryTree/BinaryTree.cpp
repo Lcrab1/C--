@@ -1,6 +1,7 @@
 #include"BinaryTree.h"
 #include<queue>
 #include<string.h>
+#include<stack>
 #define MAX 20
 //无参构造函数
 template<typename T>
@@ -73,32 +74,138 @@ void _BINARYTREENODE_<T>::infix()
 template<typename T>
 void _BINARYTREENODE_<T>::levelOrder()
 {
+    _BINARYTREENODE_<T>* cur=this;
     queue<_BINARYTREENODE_<T>*>q;
-    while(this!=nullptr)
+    while(cur!=nullptr)
     {
         //访问当前节点数据域
-        visit(this);
+        visit(cur);
         //将当前节点的孩子插入队列
-        if(this->leftChild!=nullptr)
-            q.push(this->leftChild);
-        if(this->rightChild!=nullptr)
-            q.push(this->rightChild);
+        if(cur->leftChild!=nullptr)
+            q.push(cur->leftChild);
+        if(cur->rightChild!=nullptr)
+            q.push(cur->rightChild);
         //提取下一个要访问的节点
-        if(q.empty()){return;}
-        *this=*q.front();
+        if(q.empty()){break;}
+        cur=q.front();
         q.pop();
     }
 }
 
+//按值查找
 template<typename T>
 //为什么用const char*代替string就不对呢？主要是在比较t->element和parameter1这两个字符串时会出错,不管是==还是strcmp都会错
-const char* test(_BINARYTREENODE_<T>* t,const char* parameter1){
-    if(t == nullptr)
+const char* _BINARYTREENODE_<T>::searchWithValue(const char* parameter1){
+    if(this == nullptr)
         return "wrong parameter!";
-    if(test(t->leftChild,parameter1)==parameter1 || strcmp(t->element,parameter1)==0 || test(t->rightChild,parameter1)==parameter1)
+    if(this->leftChild->searchWithValue(parameter1)==parameter1 || strcmp(this->element,parameter1)==0 || this->rightChild->searchWithValue(parameter1)==parameter1)
         return parameter1;
     else
         return "wrong parameter!";
+}
+//求树的深度
+template<typename T>
+int _BINARYTREENODE_<T>::deep()
+{
+    if(this==nullptr){return 0;}
+    int deepleft=1;
+    int deepright=1;
+    if(this->leftChild!=nullptr){
+        deepleft+=this->leftChild->deep();
+    }
+    if(this->rightChild!=nullptr){
+        deepright+=this->rightChild->deep();
+    }
+    return deepleft>deepright?deepleft:deepright;
+}
+
+//输出叶子结点
+template<typename T>
+void _BINARYTREENODE_<T>::printLeaf(){
+
+    if(this->leftChild!=nullptr)
+    this->leftChild->printLeaf();
+    if(this->rightChild!=nullptr)
+    this->rightChild->printLeaf();
+    if(this->leftChild==nullptr&&this->rightChild==nullptr)
+    cout<<this->element<<"  ";
+}
+
+//非递归前序遍历
+template<typename T>
+void _BINARYTREENODE_<T>::preOrderWithoutR()
+{
+    stack<_BINARYTREENODE_<T>*>s;   //定义辅助栈
+    _BINARYTREENODE_<T>* cur=this;
+    while(cur!=nullptr||!s.empty())
+    {
+        while(cur!=nullptr){
+            cout<<cur->element<<"  ";
+            s.push(cur);
+            cur=cur->leftChild;
+        }
+        if(!s.empty())
+        {
+            cur=s.top();
+            cur=cur->rightChild;
+            s.pop();
+        }
+    }
+    cout<<endl;
+}
+
+//非递归中序遍历
+template<typename T>
+void _BINARYTREENODE_<T>::inOrderWithoutR()
+{
+    stack<_BINARYTREENODE_<T>*>s;   //定义辅助栈
+    _BINARYTREENODE_<T>* cur=this;
+    while(cur!=nullptr||!s.empty())
+    {
+        while(cur!=nullptr){
+
+            s.push(cur);
+            cur=cur->leftChild;
+        }
+        if(!s.empty())
+        {
+            cur=s.top();
+            cout<<cur->element<<"  ";
+            cur=cur->rightChild;
+            s.pop();
+        }
+    }
+    cout<<endl;
+}
+
+//非递归后序遍历
+template<typename T>
+void _BINARYTREENODE_<T>::postOrderWithoutR()
+{
+    stack<_BINARYTREENODE_<T>*>s;   //定义辅助栈
+    _BINARYTREENODE_<T>* cur=this;
+    while(cur!=nullptr||!s.empty())
+    {
+        while(cur!=nullptr)
+        {
+            s.push(cur);
+            cur=cur->leftChild;
+        }
+        while(!s.empty()&&s.top()->flag==true)
+        {
+            cur=s.top();
+            cout<<cur->element<<"  ";
+            s.pop();
+        }
+        if(cur==this) break;
+        if(!s.empty())
+        {
+            cur=s.top();
+            cur->flag=true;
+            cur=cur->rightChild;
+        }
+    }
+    cout<<endl;
 }
 
 
@@ -108,18 +215,7 @@ int main(){
     _BINARYTREENODE_<const char*>*t4=new _BINARYTREENODE_<const char*>("test");
     _BINARYTREENODE_<const char*>*t1=new _BINARYTREENODE_<const char*>("leftChild",t4,nullptr);
     _BINARYTREENODE_<const char*>*t3=new _BINARYTREENODE_<const char*>("+",t1,t2);
-    char* String=new char[MAX];
-    cin>>String;
-    if(test(t3,String)==String){
-        cout<<"found "<<String<<" successfully!"<<endl;
-    }
-    else
-    {
-        cout<<"fail to find "<<String<<endl;
-    }
-    cout<<test(t3,String)<<endl;
 
-    cout<<0<<endl;
     cout<<"前序遍历： ";
     t3->preOrder();
     cout<<endl;
@@ -134,5 +230,27 @@ int main(){
     cout<<endl;
     cout<<"层序遍历： ";
     t3->levelOrder();
+    cout<<endl;
+    cout<<"该树的深度为："<<t3->deep()<<endl;
+    cout<<"该树的叶子结点为：";
+    t3->printLeaf();
+    cout<<endl;
+    // cout<<"请输入你要查找的值:"<<endl;
+    // char* String=new char[MAX];
+    // cin>>String;
+    // if(t3->searchWithValue(String)==String){
+    //     cout<<"found "<<String<<" successfully!"<<endl;
+    // }
+    // else
+    // {
+    //     cout<<"fail to find "<<String<<endl;
+    // }
+    //cout<<t3->searchWithValue(String)<<endl;
+    cout<<"非递归前序遍历：";
+    t3->preOrderWithoutR();
+    cout<<"非递归中序遍历：";
+    t3->inOrderWithoutR();
+    cout<<"非递归后序遍历：";
+    t3->postOrderWithoutR();
     system("pause");
 }
