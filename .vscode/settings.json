@@ -1,5 +1,10 @@
 {
     "files.associations": {
-        "ostream": "cpp"
+        "ostream": "cpp",
+        "iostream": "cpp",
+        "xstring": "cpp",
+        "atomic": "cpp",
+        "queue": "cpp",
+        "stack": "cpp"
     }
 }
