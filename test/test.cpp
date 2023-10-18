@@ -14,5 +14,6 @@ int main(){
    cout<<"1"<<endl;
    else
    cout<<"0"<<endl;
+   cout << "this is a test"<<endl;
    system("pause");
 }
