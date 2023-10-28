@@ -36,7 +36,7 @@ void AddNameWIthArray(PNODE Node)
             TCHAR *v5 = nullptr;
             Node->MaxLength += MAX;
             v5 = new TCHAR[Node->MaxLength];
-            memcpy(v5, Node->Name, sizeof(Node->Name));
+            memcpy(v5, Node->Name, sizeof(TCHAR)*Node->Length);
             delete Node->Name;
             Node->Name = v5;
         }
