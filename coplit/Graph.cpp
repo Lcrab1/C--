@@ -21,7 +21,6 @@ typedef struct
     VertexNode adjlist[20];
     int n, e;
 } GraphAdjlist;  //声明图的邻接表类型
-in  
 
 
 int main() // A B C D E
@@ -29,9 +28,7 @@ int main() // A B C D E
     GraphAdjlist G;
     create1(&G);
 
-    Prim(G, 0);
-    Kruskal(G);
-    Dijkstra(G, 0);
+
 
     system("pause");
     return 0;
