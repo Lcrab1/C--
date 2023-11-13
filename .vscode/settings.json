@@ -5,6 +5,7 @@
         "xstring": "cpp",
         "atomic": "cpp",
         "queue": "cpp",
-        "stack": "cpp"
+        "stack": "cpp",
+        "bit": "cpp"
     }
 }

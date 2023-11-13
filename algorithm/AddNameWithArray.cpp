@@ -31,7 +31,7 @@ void AddNameWIthArray(PNODE Node)
     v1 = _gettchar();
     while (v1 != 0xA)
     {
-        if (Node->Length + 1 == Node->Length) //为\0预留出空间
+        if (Node->Length + 1 == Node->MaxLength) //为\0预留出空间
         {
             TCHAR *v5 = nullptr;
             Node->MaxLength += MAX;
