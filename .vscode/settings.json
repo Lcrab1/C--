@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "xhash": "cpp",
-        "queue": "cpp"
+        "queue": "cpp",
+        "iostream": "cpp"
     }
 }

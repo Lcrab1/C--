@@ -43,3 +43,6 @@ int getMaxWidth(NODE* head){
         }
     }
 }
+int main(){
+    system("pause");
+}
