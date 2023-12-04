@@ -1,11 +1,6 @@
 {
     "files.associations": {
-        "ostream": "cpp",
-        "iostream": "cpp",
-        "xstring": "cpp",
-        "atomic": "cpp",
-        "queue": "cpp",
-        "stack": "cpp",
-        "bit": "cpp"
+        "xhash": "cpp",
+        "queue": "cpp"
     }
 }
