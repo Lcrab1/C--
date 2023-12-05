@@ -2,6 +2,7 @@
     "files.associations": {
         "xhash": "cpp",
         "queue": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "ostream": "cpp"
     }
 }

@@ -37,11 +37,12 @@ void test()
 
             sin.str(line);
             //将字符串流sin中的字符读到字符串数组words中，以逗号为分隔符
-            while (getline(sin, word))
+            while (getline(sin, word, ','))
             {
-                cout << word << endl;
+                cout << word << "   ";
                 words.push_back(word); //将每一格中的数据逐个push
             }
+            cout << endl;
         }
         csv_data.close();
     }
@@ -50,5 +51,6 @@ void test()
 int main()
 {
     test();
+    system("pause");
     return 0;
 }
