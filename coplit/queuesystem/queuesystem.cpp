@@ -213,7 +213,7 @@ void enterCashier(vector<queue<Customer>> *cashier, queue<Customer> *q, Time &ti
         cus->m_num = ++__mark;
         cus->m_enter.m_hour = time.m_hour;
         cus->m_enter.m_minu = time.m_minu;
-        cus->m_enter.m_secn = time.m_secn + rand() % (uint32_t)59 + 1;
+        cus->m_enter.m_secn = time.m_secn + rand() % 59 + 1;
         arr[i] = cus;
         //决策并进入收银台
         chooseCashier(cashier, q, cus);
@@ -228,6 +228,12 @@ void enterCashier(vector<queue<Customer>> *cashier, queue<Customer> *q, Time &ti
     bool flag1 = false;
     bool flag2 = false;
     //队列不为空 且离队分钟与当前分钟相同
+
+    // cout << "测试用" << q->front()->m_enter.m_minu << ":";
+    // cout << q->front()->m_enter.m_secn << endl;
+    // cout << "测试用" << q->front()->m_leave.m_minu << ":";
+    // cout << q->front()->m_leave.m_secn << endl;
+
     while ((!q->empty()) && (q->front()->m_leave.m_minu == arr[0]->m_enter.m_minu))
     {
         // L开头
@@ -239,7 +245,7 @@ void enterCashier(vector<queue<Customer>> *cashier, queue<Customer> *q, Time &ti
             (*cashier)[temp->m_NoC].pop();
             if (!(*cashier)[temp->m_NoC].empty())
             {
-                (*cashier)[temp->m_NoC].front()->m_leave.m_minu += 3;
+                (*cashier)[temp->m_NoC].front()->m_leave = temp->m_leave + 3;
                 q->push((*cashier)[temp->m_NoC].front());
             }
 
@@ -257,7 +263,7 @@ void enterCashier(vector<queue<Customer>> *cashier, queue<Customer> *q, Time &ti
             (*cashier)[temp->m_NoC].pop();
             if (!(*cashier)[temp->m_NoC].empty())
             {
-                (*cashier)[temp->m_NoC].front()->m_leave.m_minu += 3;
+                (*cashier)[temp->m_NoC].front()->m_leave = temp->m_leave + 3;
                 q->push((*cashier)[temp->m_NoC].front());
             }
             printLeaveCus(temp, cashier);
@@ -284,7 +290,7 @@ void enterCashier(vector<queue<Customer>> *cashier, queue<Customer> *q, Time &ti
             (*cashier)[temp->m_NoC].pop();
             if (!(*cashier)[temp->m_NoC].empty())
             {
-                (*cashier)[temp->m_NoC].front()->m_leave.m_minu += 3;
+                (*cashier)[temp->m_NoC].front()->m_leave = temp->m_leave + 3;
                 q->push((*cashier)[temp->m_NoC].front());
             }
 
@@ -309,7 +315,7 @@ void enterCashier(vector<queue<Customer>> *cashier, queue<Customer> *q, Time &ti
             (*cashier)[temp->m_NoC].pop();
             if (!(*cashier)[temp->m_NoC].empty())
             {
-                (*cashier)[temp->m_NoC].front()->m_leave.m_minu += 3;
+                (*cashier)[temp->m_NoC].front()->m_leave = temp->m_leave + 3;
                 q->push((*cashier)[temp->m_NoC].front());
             }
 
@@ -340,7 +346,7 @@ void enterCashier(vector<queue<Customer>> *cashier, queue<Customer> *q, Time &ti
             (*cashier)[temp->m_NoC].pop();
             if (!(*cashier)[temp->m_NoC].empty())
             {
-                (*cashier)[temp->m_NoC].front()->m_leave.m_minu += (uint32_t)3;
+                (*cashier)[temp->m_NoC].front()->m_leave = temp->m_leave + 3;
                 q->push((*cashier)[temp->m_NoC].front());
             }
 
@@ -363,7 +369,7 @@ void enterCashier(vector<queue<Customer>> *cashier, queue<Customer> *q, Time &ti
             (*cashier)[temp->m_NoC].pop();
             if (!(*cashier)[temp->m_NoC].empty())
             {
-                (*cashier)[temp->m_NoC].front()->m_leave.m_minu += (uint32_t)3;
+                (*cashier)[temp->m_NoC].front()->m_leave = temp->m_leave + 3;
                 q->push((*cashier)[temp->m_NoC].front());
             }
             printLeaveCus(temp, cashier);
@@ -378,7 +384,7 @@ void enterCashier(vector<queue<Customer>> *cashier, queue<Customer> *q, Time &ti
                 (*cashier)[temp->m_NoC].pop();
                 if (!(*cashier)[temp->m_NoC].empty())
                 {
-                    (*cashier)[temp->m_NoC].front()->m_leave.m_minu += (uint32_t)3;
+                    (*cashier)[temp->m_NoC].front()->m_leave = temp->m_leave + 3;
                     q->push((*cashier)[temp->m_NoC].front());
                 }
                 printLeaveCus(temp, cashier);
@@ -401,7 +407,7 @@ void enterCashier(vector<queue<Customer>> *cashier, queue<Customer> *q, Time &ti
             (*cashier)[temp->m_NoC].pop();
             if (!(*cashier)[temp->m_NoC].empty())
             {
-                (*cashier)[temp->m_NoC].front()->m_leave.m_minu += (uint32_t)3;
+                (*cashier)[temp->m_NoC].front()->m_leave = temp->m_leave + 3;
                 q->push((*cashier)[temp->m_NoC].front());
             }
 
@@ -427,7 +433,7 @@ void enterCashier(vector<queue<Customer>> *cashier, queue<Customer> *q, Time &ti
             (*cashier)[temp->m_NoC].pop();
             if (!(*cashier)[temp->m_NoC].empty())
             {
-                (*cashier)[temp->m_NoC].front()->m_leave.m_minu += (uint32_t)3;
+                (*cashier)[temp->m_NoC].front()->m_leave = temp->m_leave + 3;
                 q->push((*cashier)[temp->m_NoC].front());
             }
             printLeaveCus(temp, cashier);
@@ -442,7 +448,7 @@ void enterCashier(vector<queue<Customer>> *cashier, queue<Customer> *q, Time &ti
                 (*cashier)[temp->m_NoC].pop();
                 if (!(*cashier)[temp->m_NoC].empty())
                 {
-                    (*cashier)[temp->m_NoC].front()->m_leave.m_minu += (uint32_t)3;
+                    (*cashier)[temp->m_NoC].front()->m_leave = temp->m_leave + 3;
                     q->push((*cashier)[temp->m_NoC].front());
                 }
                 printLeaveCus(temp, cashier);
