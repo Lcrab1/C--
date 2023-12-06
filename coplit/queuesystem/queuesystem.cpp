@@ -1,194 +1,483 @@
 #include <iostream>
-#include <ctime>
-#include <queue>
-#include <vector>
 using namespace std;
+#include <vector>
+#include <queue>
+#include <ctime>
+#include <limits.h>
 
-typedef struct _TIME_
+uint32_t __mark = 0;
+
+typedef struct Time
 {
-    uint32_t hour;
-    uint32_t mins;
-    uint32_t sec;
-
-    _TIME_()
+    uint32_t m_hour;
+    uint32_t m_minu;
+    uint32_t m_secn;
+    Time()
     {
-        hour = 8;
-        mins = 0;
-        sec = 0;
+        m_hour = 8;
+        m_minu = 0;
+        m_secn = 0;
     }
 
-    void printTime()
+    Time &operator=(const Time &time)
     {
-        printf("%.2d:%.2d:%.2d", hour, mins, sec);
+        m_hour = time.m_hour;
+        m_minu = time.m_minu;
+        m_secn = time.m_secn;
+        return *this;
     }
 
-} TIME;
+    Time operator+(uint32_t x) const
+    {
+        Time result = *this;
+        result.m_minu += x;
+        return result;
+    }
+
+    bool operator<=(const Time &time) const
+    {
+        uint32_t last1 = m_hour * 3600 + m_minu * 60 + m_secn;
+        uint32_t last2 = time.m_hour * 3600 + time.m_minu * 60 + time.m_secn;
+        return last1 <= last2;
+    }
+
+    bool operator>=(const Time &time) const
+    {
+        uint32_t last1 = m_hour * 3600 + m_minu * 60 + m_secn;
+        uint32_t last2 = time.m_hour * 3600 + time.m_minu * 60 + time.m_secn;
+        return last1 >= last2;
+    }
+
+    bool operator<(const Time &time) const
+    {
+        uint32_t last1 = m_hour * 3600 + m_minu * 60 + m_secn;
+        uint32_t last2 = time.m_hour * 3600 + time.m_minu * 60 + time.m_secn;
+        return last1 < last2;
+    }
+
+    bool operator>(const Time &time) const
+    {
+        uint32_t last1 = m_hour * (uint32_t)3600 + m_minu * (uint32_t)60 + m_secn;
+        uint32_t last2 = time.m_hour * (uint32_t)3600 + time.m_minu * (uint32_t)60 + time.m_secn;
+        return last1 > last2;
+    }
+
+    void printTime() const
+    {
+        printf("%.2d:%.2d:%.2d", m_hour, m_minu, m_secn);
+    }
+
+} Time;
 
 typedef struct _CUSTOMER_
 {
-    TIME enter;  //进入队列的时刻
-    TIME paying; //付款的时刻
-    TIME leave;  //离开的时刻
-    int num;     //顾客编号
-    int NoC;     // Number of Cashier
-    bool flag = false;
-} CUS;
+    uint32_t m_num;
+    uint32_t m_NoC;
+    Time m_enter;
+    Time m_paying;
+    Time m_leave;
 
-int __NoC = 0;  //顾客编号    number of customer
-queue<CUS> __Q; //四个收银台队首 再成一个队列
-
-//四个销售台用vector存储
-vector<queue<CUS>> __Cashier(4); // manage Cashier
-
-int getShortest()
-{
-    int smallest = 0;
-    for (int i = 0; i < 4 - 1; i++)
+    _CUSTOMER_()
     {
-        smallest = __Cashier[i].size() < __Cashier[i + 1].size() ? i : i + 1;
+        m_num = 0;
     }
-    return smallest;
-}
 
-void timeUpdata(TIME *time)
+} * Customer;
+
+void swapTime(Time &time1, Time &time2)
 {
-    TIME pretime;
-    //只记录当前小时和分钟，秒数随机生成
-    pretime.hour = time->hour;
-    pretime.mins = time->mins;
-    pretime.sec = 0;
-    // custumer.time.sec=
-    pretime.sec += rand() % 59 + 1;
-    time->sec = pretime.sec;
-    //用不到
-    if (time->sec >= 60)
+    if (time1.m_hour != time2.m_hour)
     {
-        time->mins++;
-        time->sec -= 60;
+        time1.m_hour ^= time2.m_hour;
+        time2.m_hour ^= time1.m_hour;
+        time1.m_hour ^= time2.m_hour;
     }
-    if (time->mins >= 60)
+    if (time1.m_minu != time2.m_minu)
     {
-        time->hour++;
-        time->mins -= 60;
+        time1.m_minu ^= time2.m_minu;
+        time2.m_minu ^= time1.m_minu;
+        time1.m_minu ^= time2.m_minu;
+    }
+    if (time1.m_secn != time2.m_secn)
+    {
+        time1.m_secn ^= time2.m_secn;
+        time2.m_secn ^= time1.m_secn;
+        time1.m_secn ^= time2.m_secn;
     }
 }
 
-//每分钟更新两次，对应两个顾客
-void updataPerMinute(TIME *time, CUS *cus)
-{ //可以同时传入顾客
-    TIME updataTime[2];
-    for (int i = 0; i < 2; i++)
+void printEnterCus(Customer cus)
+{
+    cus->m_enter.printTime();
+    cout << "          ";
+    printf("%u", cus->m_num);
+    printf("      所在柜台：%u", cus->m_NoC);
+}
+
+void printLeaveCus(Customer cus)
+{
+    cus->m_leave.printTime();
+    cout << "          ";
+    printf("%u   出队", (uint32_t)cus->m_num);
+    printf("所在柜台：%u", (uint32_t)cus->m_NoC);
+}
+
+uint32_t getShortest(vector<queue<Customer>> *cashier)
+{
+    uint32_t shortestSign = 0;
+    uint32_t shortestQ = UINT32_MAX;
+    for (int i = 0; i < (*cashier).size(); i++)
     {
-        timeUpdata(time);
-        //同时更新顾客的enter时间
-        cus[__NoC].enter = *time;
-        //更新顾客的编号
-        cus[__NoC].num = __NoC + 1;
-
-        updataTime[i] = *time;
-
-        //得到队列最短的收银台编号
-        int sig = getShortest();
-        //新顾客进入队列最短的队伍
-        if (__Cashier[sig].size() == 0)
+        if ((*cashier)[i].size() < shortestQ)
         {
-            __Cashier[sig].push(cus[__NoC]);
-            cus[__NoC].NoC = sig;
-            //柜台人数均为0时,即初始状态
-            cus[__NoC].paying = cus[__NoC].enter;
-            cus[__NoC].leave = cus[__NoC].paying;
-            cus[__NoC].leave.mins += 3;
-
-            cus[__NoC].flag = true;
-
-            //__Q.push(cus[__NoC]);
-        }
-        else
-        {
-            cus[__NoC].NoC = sig;
-            __Cashier[sig].push(cus[__NoC]);
-        }
-        __NoC++;
-    }
-    //按照sec进行升序
-    if (cus[__NoC - 2].paying.sec < cus[__NoC - 1].paying.sec)
-    {
-        cus[__NoC - 2].paying.sec ^= cus[__NoC - 1].paying.sec;
-        cus[__NoC - 1].paying.sec ^= cus[__NoC - 2].paying.sec;
-        cus[__NoC - 2].paying.sec ^= cus[__NoC - 1].paying.sec;
-        if (cus[__NoC - 2].flag == true)
-        {
-            __Q.push(cus[__NoC - 2]);
-        }
-        if (cus[__NoC - 1].flag == true)
-        {
-            __Q.push(cus[__NoC - 1]);
+            shortestQ = (*cashier)[i].size();
+            shortestSign = i;
         }
     }
-    else if (cus[__NoC - 2].flag == true)
+
+    //记录最小队列的编号
+    vector<int> help;
+    int count = 0;
+    for (int i = 0; i < (*cashier).size(); i++)
     {
-        __Q.push(cus[__NoC - 2]);
-    }
-    else if (cus[__NoC - 1].flag == true)
-    {
-        __Q.push(cus[__NoC - 1]);
+        if ((*cashier)[i].size() == shortestQ)
+        {
+            help.push_back(i);
+            count++;
+        }
     }
 
-    //按照time->sec进行升序
-    if (updataTime[0].sec > updataTime[1].sec)
+    //最小队列不止一个 比较队头的paying时间，进入paying早的队列
+    if (count > 1)
     {
-        updataTime[0].sec ^= updataTime[1].sec;
-        updataTime[1].sec ^= updataTime[0].sec;
-        updataTime[0].sec ^= updataTime[1].sec;
-    }
-    for (int i = 0; i < 2; i++)
-    {
-        //打印新顾客的入队时间前判断是否有顾客可以出队
-        if (!__Q.empty())
+        int earlist = 0;
+        for (int i = 0; i < count - 1; i++)
         {
-            CUS curPayingCus = __Q.front();
-            if (updataTime[i].mins > curPayingCus.leave.mins || updataTime[i].mins == curPayingCus.leave.mins && updataTime[i].sec > curPayingCus.leave.sec)
+            //获取队列头部付款区最早的下标
+            if ((*cashier)[help[i]].empty())
             {
-                //输出顾客的信息
-                cout << "顾客离开时间:";
-                curPayingCus.leave.printTime();
-                printf("\r\n");
-                //弹出队头
-                __Q.pop();
-                //从收银台弹出
-                __Cashier[curPayingCus.NoC].pop();
-                //新进入收银台顾客的收银时间是队头顾客的离开时间
-                if (!__Cashier[curPayingCus.NoC].empty())
-                {
-                    CUS *temp = &__Cashier[curPayingCus.NoC].front();
-                    temp->paying = curPayingCus.leave;
-                    temp->leave.mins = temp->paying.mins + 3;
-                    temp->leave.sec = curPayingCus.leave.sec;
-                    __Q.push(*temp);
-                }
+                earlist = help[i];
+                break;
+            }
+            Time time1 = (*cashier)[help[i]].front()->m_paying;
+            Time time2 = (*cashier)[help[i + 1]].front()->m_paying;
+            if (time1 <= time2)
+            {
+                earlist = help[i];
+            }
+            else
+            {
+                earlist = help[i + 1];
             }
         }
-
-        updataTime[i].printTime();
-        printf("\r\n"); //可在此处输出其他数据
+        return earlist;
     }
-    time->mins++;
+    return shortestSign;
 }
 
-void timeTable(TIME *time, CUS *cus)
+void chooseCashier(vector<queue<Customer>> *cashier, queue<Customer> *q, Customer cus, Time &time)
 {
-    uint32_t simulTimes = 60; //经过分钟数
-    for (int i = 0; i < simulTimes; i++)
+    //决策
+    //
+    // 1、选择队列最短的收银台
+    uint32_t shortestQ = getShortest(cashier);
+    // 2、收银台为空  直接进入 直接付款
+    if ((*cashier)[shortestQ].empty())
     {
-        updataPerMinute(time, cus);
+
+        cus->m_paying = cus->m_enter;
+        cus->m_leave.m_hour = cus->m_paying.m_hour;
+        cus->m_leave.m_minu = cus->m_paying.m_minu + (uint32_t)3;
+        cus->m_leave.m_secn = cus->m_paying.m_secn;
+        cus->m_NoC = shortestQ;
+        (*cashier)[shortestQ].push(cus);
+        q->push(cus);
+    }
+    else
+    { // 3、收银台不为空，直接进入
+        (*cashier)[shortestQ].push(cus);
+    }
+}
+
+//顾客进入收银台
+void enterCashier(vector<queue<Customer>> *cashier, queue<Customer> *q, Time &time)
+{
+
+    Customer arr[2];
+
+    for (int i = 0; i < 2; i++)
+    {
+        Customer cus = new _CUSTOMER_;
+        cus->m_num = ++__mark;
+        cus->m_enter.m_hour = time.m_hour;
+        cus->m_enter.m_minu = time.m_minu;
+        cus->m_enter.m_secn = time.m_secn + rand() % (uint32_t)59 + 1;
+        arr[i] = cus;
+        //决策并进入收银台
+        chooseCashier(cashier, q, cus, time);
+    }
+    //进入的秒改为升序，同时修改离开的秒
+    if (arr[0]->m_enter > arr[1]->m_enter)
+    {
+        swapTime(arr[0]->m_enter, arr[1]->m_enter);
+        swapTime(arr[0]->m_leave, arr[1]->m_leave);
+    }
+
+    bool flag1 = false;
+    bool flag2 = false;
+    //队列不为空 且离队分钟与当前分钟相同
+    while ((!q->empty()) && (q->front()->m_leave.m_minu == arr[0]->m_enter.m_minu))
+    {
+        // L开头
+        if (flag1 == false && q->front()->m_leave <= arr[0]->m_enter)
+        {
+            flag1 = true;
+            Customer temp = q->front();
+            q->pop();
+            (*cashier)[temp->m_NoC].pop();
+            if (!(*cashier)[temp->m_NoC].empty())
+            {
+                (*cashier)[temp->m_NoC].front()->m_leave.m_minu += 3;
+                q->push((*cashier)[temp->m_NoC].front());
+            }
+
+            printLeaveCus(temp);
+            // delete temp;
+            // temp = nullptr;
+            printf("\r\n");
+        }
+
+        // LLEE
+        if (flag1 == true && q->front()->m_leave <= arr[0]->m_enter)
+        {
+            Customer temp = q->front();
+            q->pop();
+            (*cashier)[temp->m_NoC].pop();
+            if (!(*cashier)[temp->m_NoC].empty())
+            {
+                (*cashier)[temp->m_NoC].front()->m_leave.m_minu += 3;
+                q->push((*cashier)[temp->m_NoC].front());
+            }
+            printLeaveCus(temp);
+            printf("\r\n");
+
+            for (int i = 0; i < 2; i++)
+            {
+                printEnterCus(arr[i]);
+                printf("\r\n");
+            }
+            time.m_minu++;
+            // delete temp;
+            // temp = nullptr;
+            return;
+        }
+        // LELE
+        else if (flag1 == true &&
+                 q->front()->m_leave >= arr[0]->m_enter &&
+                 q->front()->m_leave <= arr[1]->m_enter)
+        {
+
+            Customer temp = q->front();
+            q->pop();
+            (*cashier)[temp->m_NoC].pop();
+            if (!(*cashier)[temp->m_NoC].empty())
+            {
+                (*cashier)[temp->m_NoC].front()->m_leave.m_minu += 3;
+                q->push((*cashier)[temp->m_NoC].front());
+            }
+
+            printEnterCus(arr[0]); //改了此处
+            printf("\r\n");
+
+            printLeaveCus(temp);
+            printf("\r\n");
+
+            printEnterCus(arr[1]); //改了此处
+            printf("\r\n");
+            // delete temp;
+            // temp = nullptr;
+            time.m_minu++;
+            return;
+        }
+        // LEEL
+        if (flag1 == true && q->front()->m_leave >= arr[1]->m_enter)
+        {
+            Customer temp = q->front();
+            q->pop();
+            (*cashier)[temp->m_NoC].pop();
+            if (!(*cashier)[temp->m_NoC].empty())
+            {
+                (*cashier)[temp->m_NoC].front()->m_leave.m_minu += 3;
+                q->push((*cashier)[temp->m_NoC].front());
+            }
+
+            printEnterCus(arr[0]); //改了此处
+            printf("\r\n");
+
+            printEnterCus(arr[1]); //改了此处
+            printf("\r\n");
+
+            printLeaveCus(temp);
+            printf("\r\n");
+
+            // delete temp;
+            // temp = nullptr;
+            time.m_minu++;
+            return;
+        }
+
+        // E开头
+        if (flag1 == false && flag2 == false &&
+            q->front()->m_leave >= arr[0]->m_enter &&
+            q->front()->m_leave <= arr[1]->m_enter)
+        { // ELLE
+
+            flag2 = true;
+            Customer temp = q->front();
+            q->pop();
+            (*cashier)[temp->m_NoC].pop();
+            if (!(*cashier)[temp->m_NoC].empty())
+            {
+                (*cashier)[temp->m_NoC].front()->m_leave.m_minu += (uint32_t)3;
+                q->push((*cashier)[temp->m_NoC].front());
+            }
+
+            printEnterCus(arr[0]); //改了此处
+            printf("\r\n");
+
+            printLeaveCus(temp);
+            printf("\r\n");
+            // delete temp;
+            // temp = nullptr;
+        }
+        // ELLE
+        if (flag2 == true &&
+            q->front()->m_leave >= arr[0]->m_enter &&
+            q->front()->m_leave <= arr[1]->m_enter)
+        {
+
+            Customer temp = q->front();
+            q->pop();
+            (*cashier)[temp->m_NoC].pop();
+            if (!(*cashier)[temp->m_NoC].empty())
+            {
+                (*cashier)[temp->m_NoC].front()->m_leave.m_minu += (uint32_t)3;
+                q->push((*cashier)[temp->m_NoC].front());
+            }
+            printLeaveCus(temp);
+            printf("\r\n");
+            // delete temp;
+            // temp = nullptr;
+
+            if (!q->empty())
+            {
+                temp = q->front();
+                q->pop();
+                (*cashier)[temp->m_NoC].pop();
+                if (!(*cashier)[temp->m_NoC].empty())
+                {
+                    (*cashier)[temp->m_NoC].front()->m_leave.m_minu += (uint32_t)3;
+                    q->push((*cashier)[temp->m_NoC].front());
+                }
+                printLeaveCus(temp);
+                printf("\r\n");
+            }
+
+            printEnterCus(arr[1]); //改了此处
+            printf("\r\n");
+            // if (temp != nullptr) {
+            //     delete temp;
+            // }
+            time.m_minu++;
+            return;
+        }
+        // ELEL
+        else if (flag2 == true && q->front()->m_leave >= arr[1]->m_enter)
+        {
+            Customer temp = q->front();
+            q->pop();
+            (*cashier)[temp->m_NoC].pop();
+            if (!(*cashier)[temp->m_NoC].empty())
+            {
+                (*cashier)[temp->m_NoC].front()->m_leave.m_minu += (uint32_t)3;
+                q->push((*cashier)[temp->m_NoC].front());
+            }
+
+            printEnterCus(arr[0]); //改了此处
+            printf("\r\n");
+
+            printLeaveCus(temp);
+            printf("\r\n");
+            // delete temp;
+            time.m_minu++;
+            return;
+        }
+        // EELL
+        if (flag1 == false && flag2 == false && q->front()->m_leave >= arr[1]->m_enter)
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                printEnterCus(arr[i]);
+                printf("\r\n");
+            }
+            Customer temp = q->front();
+            q->pop();
+            (*cashier)[temp->m_NoC].pop();
+            if (!(*cashier)[temp->m_NoC].empty())
+            {
+                (*cashier)[temp->m_NoC].front()->m_leave.m_minu += (uint32_t)3;
+                q->push((*cashier)[temp->m_NoC].front());
+            }
+            printLeaveCus(temp);
+            printf("\r\n");
+            // delete temp;
+            // temp = nullptr;
+
+            if (!q->empty())
+            {
+                temp = q->front();
+                q->pop();
+                (*cashier)[temp->m_NoC].pop();
+                if (!(*cashier)[temp->m_NoC].empty())
+                {
+                    (*cashier)[temp->m_NoC].front()->m_leave.m_minu += (uint32_t)3;
+                    q->push((*cashier)[temp->m_NoC].front());
+                }
+                printLeaveCus(temp);
+                printf("\r\n");
+            }
+            /*    if (temp != nullptr) {
+                    delete temp;
+                }*/
+            time.m_minu++;
+            return;
+        }
+    }
+
+    for (int i = 0; i < 2; i++)
+    {
+        printEnterCus(arr[i]);
+        printf("\r\n");
+    }
+
+    time.m_minu++;
+}
+//顾客付款，离开收银台
+
+void test_unit1()
+{
+    queue<Customer> *Q = new queue<Customer>;
+    vector<queue<Customer>> *Cashier = new vector<queue<Customer>>(8);
+    Time time;
+    for (int i = 0; i < 60; i++)
+    {
+        enterCashier(Cashier, Q, time);
     }
 }
 
 int main()
 {
     srand((unsigned int)time(NULL));
-    TIME *time = new TIME;
-    CUS *cus = new CUS[120];
-    timeTable(time, cus);
+    test_unit1();
     system("pause");
 }
