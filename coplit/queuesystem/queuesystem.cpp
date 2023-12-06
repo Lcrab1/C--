@@ -1,81 +1,193 @@
 #include <iostream>
-#include <vector>
-#include <random>
+#include <ctime>
 #include <queue>
+#include <vector>
 using namespace std;
-const int Total_Time = 60;      //总时间
-const int Arrival_Rate = 2;     //顾客到来速率
-const int Checkout_Time = 3;    //每个顾客的收银时间
-const int Max_Queue_Length = 4; //队列长度限制
-int main()
+
+typedef struct _TIME_
 {
-    int Min_Queue_Length = INT_MAX;
-    int Current_NumOf_Cashiers = 1;
-    int Current_Queue_Length = 0;
-    int NumOf_Cashiers = 1;
-    vector<queue<int>> cashiers(100); //创建收银台
-    cout << "时间（min）"<< "    "<< "1号"<< "    "<< "2号"<< "    "<< "3号"<< "    "<< "4号"<< "    "<< "5号" << "    " << "6号" << "    " << "7号" << endl;
-    for (int Current_Time = 1; Current_Time <= Total_Time; Current_Time++) //模拟顾客到来的过程
+    uint32_t hour;
+    uint32_t mins;
+    uint32_t sec;
+
+    _TIME_()
     {
-        int Num_Arrivals = 2; //这里可以直接改成 "2"
-        for (int i = 0; i < Num_Arrivals; i++)
+        hour = 8;
+        mins = 0;
+        sec = 0;
+    }
+
+    void printTime()
+    {
+        printf("%.2d:%.2d:%.2d", hour, mins, sec);
+    }
+
+} TIME;
+
+typedef struct _CUSTOMER_
+{
+    TIME enter;  //进入队列的时刻
+    TIME paying; //付款的时刻
+    TIME leave;  //离开的时刻
+    int num;     //顾客编号
+    int NoC;     // Number of Cashier
+    bool flag = false;
+} CUS;
+
+int __NoC = 0;  //顾客编号    number of customer
+queue<CUS> __Q; //四个收银台队首 再成一个队列
+
+//四个销售台用vector存储
+vector<queue<CUS>> __Cashier(4); // manage Cashier
+
+int getShortest()
+{
+    int smallest = 0;
+    for (int i = 0; i < 4 - 1; i++)
+    {
+        smallest = __Cashier[i].size() < __Cashier[i + 1].size() ? i : i + 1;
+    }
+    return smallest;
+}
+
+void timeUpdata(TIME* time)
+{
+    TIME pretime;
+    //只记录当前小时和分钟，秒数随机生成
+    pretime.hour = time->hour;
+    pretime.mins = time->mins;
+    pretime.sec = 0;
+    // custumer.time.sec=
+    pretime.sec += rand() % 59 + 1;
+    time->sec = pretime.sec;
+    //用不到
+    if (time->sec >= 60)
+    {
+        time->mins++;
+        time->sec -= 60;
+    }
+    if (time->mins >= 60)
+    {
+        time->hour++;
+        time->mins -= 60;
+    }
+}
+
+//每分钟更新两次，对应两个顾客
+void updataPerMinute(TIME* time, CUS* cus)
+{ //可以同时传入顾客
+    TIME updataTime[2];
+    for (int i = 0; i < 2; i++)
+    {
+        timeUpdata(time);
+        //同时更新顾客的enter时间
+        cus[__NoC].enter = *time;
+        //更新顾客的编号
+        cus[__NoC].num = __NoC + 1;
+
+        updataTime[i] = *time;
+
+        //得到队列最短的收银台编号
+        int sig = getShortest();
+        //新顾客进入队列最短的队伍
+        if (__Cashier[sig].size() == 0)
         {
-            int Shortest_Queue = 0;
-            int Min_Queue_Length = cashiers[0].size();
-            for (int j = 1; j < NumOf_Cashiers; j++)
-            {
-                if (cashiers[j].size() < Min_Queue_Length)
-                {
-                    Shortest_Queue = j;
-                    Min_Queue_Length = cashiers[j].size();
-                }
-            }
-            // cashiers[Shortest_Queue].push(Current_Time);
-            if (!cashiers[Shortest_Queue].empty())
-            {
-                cashiers[Shortest_Queue].push(Current_Time + cashiers[Shortest_Queue].size() * 3);
-            }
-            else
-            {
-                cashiers[Shortest_Queue].push(Current_Time);
-            }
-        }
-        int count = 0;
-        for (int i = 0; i < NumOf_Cashiers; i++) //处理每个收银台的顾客
-        {
-            if (!cashiers[i].empty())
-            {
-                if (Current_Time - cashiers[i].front() >= Checkout_Time)
-                {
-                    cashiers[i].pop();
-                    count++;
-                }
-            }
-        }
-        Current_Queue_Length = Current_Queue_Length + 2 - count;
-        if ((Current_Queue_Length / NumOf_Cashiers >= Max_Queue_Length) && (NumOf_Cashiers == 1))
-        {
-            NumOf_Cashiers++;
-        }
-        if ((Current_Queue_Length / NumOf_Cashiers >= Max_Queue_Length) && (Current_Queue_Length / NumOf_Cashiers != 0) && (NumOf_Cashiers != 1)) //检查队列长度是否超出限制
-        {
-            NumOf_Cashiers++;
-        }
-        if (Current_Time < 10)
-        {
-            cout << Current_Time << "              " << cashiers[0].size() << "      " << cashiers[1].size() << "      " << cashiers[2].size() << "      " << cashiers[3].size() << "      " << cashiers[4].size() << "      " << cashiers[5].size() << "      " << cashiers[6].size() << endl;
+            __Cashier[sig].push(cus[__NoC]);
+            cus[__NoC].NoC = sig;
+            //柜台人数均为0时,即初始状态
+            cus[__NoC].paying = cus[__NoC].enter;
+            cus[__NoC].leave = cus[__NoC].paying;
+            cus[__NoC].leave.mins += 3;
+
+            cus[__NoC].flag = true;
+
+            //__Q.push(cus[__NoC]);
         }
         else
         {
-            cout << Current_Time << "             " << cashiers[0].size() << "      " << cashiers[1].size() << "      " << cashiers[2].size() << "      " << cashiers[3].size() << "      " << cashiers[4].size() << "      " << cashiers[5].size() << "      " << cashiers[6].size() << endl;
+            cus[__NoC].NoC = sig;
+            __Cashier[sig].push(cus[__NoC]);
+        }
+        __NoC++;
+    }
+    //按照sec进行升序
+    if (cus[__NoC - 2].paying.sec < cus[__NoC - 1].paying.sec)
+    {
+        cus[__NoC - 2].paying.sec ^= cus[__NoC - 1].paying.sec;
+        cus[__NoC - 1].paying.sec ^= cus[__NoC - 2].paying.sec;
+        cus[__NoC - 2].paying.sec ^= cus[__NoC - 1].paying.sec;
+        if (cus[__NoC - 2].flag == true) {
+            __Q.push(cus[__NoC - 2]);
+        }
+        if (cus[__NoC - 1].flag == true)
+        {
+            __Q.push(cus[__NoC - 1]);
         }
     }
-    if (Current_Queue_Length < Min_Queue_Length)
+    else if (cus[__NoC - 2].flag == true)
     {
-        Min_Queue_Length = Current_Queue_Length;
-        Current_NumOf_Cashiers = NumOf_Cashiers;
+        __Q.push(cus[__NoC - 2]);
     }
-    printf("同时开设收银台的数目为：%d", Current_NumOf_Cashiers);
+    else if (cus[__NoC - 1].flag == true) {
+        __Q.push(cus[__NoC - 1]);
+    }
+
+    //按照time->sec进行升序
+    if (updataTime[0].sec > updataTime[1].sec)
+    {
+        updataTime[0].sec ^= updataTime[1].sec;
+        updataTime[1].sec ^= updataTime[0].sec;
+        updataTime[0].sec ^= updataTime[1].sec;
+    }
+    for (int i = 0; i < 2; i++)
+    {
+        //打印新顾客的入队时间前判断是否有顾客可以出队
+        if (!__Q.empty())
+        {
+            CUS curPayingCus = __Q.front();
+            if (updataTime[i].mins > curPayingCus.leave.mins || updataTime[i].mins == curPayingCus.leave.mins && updataTime[i].sec > curPayingCus.leave.sec)
+            {
+                //输出顾客的信息
+                cout << "顾客离开时间:";
+                curPayingCus.leave.printTime();
+                printf("\r\n");
+                //弹出队头
+                __Q.pop();
+                //从收银台弹出
+                __Cashier[curPayingCus.NoC].pop();
+                //新进入收银台顾客的收银时间是队头顾客的离开时间
+                if (!__Cashier[curPayingCus.NoC].empty())
+                {
+                    CUS* temp = &__Cashier[curPayingCus.NoC].front();
+                    temp->paying = curPayingCus.leave;
+                    temp->leave.mins = temp->paying.mins + 3;
+                    temp->leave.sec = curPayingCus.leave.sec;
+                    __Q.push(*temp);
+                }
+            }
+        }
+
+
+        updataTime[i].printTime();
+        printf("\r\n"); //可在此处输出其他数据
+    }
+    time->mins++;
+}
+
+void timeTable(TIME* time, CUS* cus)
+{
+    uint32_t simulTimes = 60; //经过分钟数
+    for (int i = 0; i < simulTimes; i++)
+    {
+        updataPerMinute(time, cus);
+    }
+}
+
+int main()
+{
+    srand((unsigned int)time(NULL));
+    TIME* time = new TIME;
+    CUS* cus = new CUS[120];
+    timeTable(time, cus);
     system("pause");
-    return 0;
 }

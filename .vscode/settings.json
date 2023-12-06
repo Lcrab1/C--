@@ -3,6 +3,9 @@
         "xhash": "cpp",
         "queue": "cpp",
         "iostream": "cpp",
-        "ostream": "cpp"
+        "ostream": "cpp",
+        "xlocale": "cpp",
+        "random": "cpp",
+        "stack": "cpp"
     }
 }
