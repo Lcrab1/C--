@@ -104,6 +104,7 @@ void printEnterCus(Customer cus)
     cus->m_enter.printTime();
     cout << "          ";
     printf("%d", cus->m_num);
+    printf("      所在柜台：%d", cus->m_NoC);
 }
 
 void printLeaveCus(Customer cus)
@@ -111,6 +112,7 @@ void printLeaveCus(Customer cus)
     cus->m_leave.printTime();
     cout << "          ";
     printf("%d   出队", cus->m_num);
+    printf("所在柜台：%d", cus->m_NoC);
 }
 
 uint32_t getShortest(vector<queue<Customer>> *cashier)
@@ -249,7 +251,7 @@ void enterCashier(vector<queue<Customer>> *cashier, queue<Customer> *q, Time &ti
 void test_unit1()
 {
     queue<Customer> *Q = new queue<Customer>;
-    vector<queue<Customer>> *Cashier = new vector<queue<Customer>>(4);
+    vector<queue<Customer>> *Cashier = new vector<queue<Customer>>(10);
     Time time;
     for (int i = 0; i < 60; i++)
     {
