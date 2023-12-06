@@ -50,7 +50,7 @@ int getShortest()
     return smallest;
 }
 
-void timeUpdata(TIME* time)
+void timeUpdata(TIME *time)
 {
     TIME pretime;
     //只记录当前小时和分钟，秒数随机生成
@@ -74,7 +74,7 @@ void timeUpdata(TIME* time)
 }
 
 //每分钟更新两次，对应两个顾客
-void updataPerMinute(TIME* time, CUS* cus)
+void updataPerMinute(TIME *time, CUS *cus)
 { //可以同时传入顾客
     TIME updataTime[2];
     for (int i = 0; i < 2; i++)
@@ -116,7 +116,8 @@ void updataPerMinute(TIME* time, CUS* cus)
         cus[__NoC - 2].paying.sec ^= cus[__NoC - 1].paying.sec;
         cus[__NoC - 1].paying.sec ^= cus[__NoC - 2].paying.sec;
         cus[__NoC - 2].paying.sec ^= cus[__NoC - 1].paying.sec;
-        if (cus[__NoC - 2].flag == true) {
+        if (cus[__NoC - 2].flag == true)
+        {
             __Q.push(cus[__NoC - 2]);
         }
         if (cus[__NoC - 1].flag == true)
@@ -128,7 +129,8 @@ void updataPerMinute(TIME* time, CUS* cus)
     {
         __Q.push(cus[__NoC - 2]);
     }
-    else if (cus[__NoC - 1].flag == true) {
+    else if (cus[__NoC - 1].flag == true)
+    {
         __Q.push(cus[__NoC - 1]);
     }
 
@@ -158,7 +160,7 @@ void updataPerMinute(TIME* time, CUS* cus)
                 //新进入收银台顾客的收银时间是队头顾客的离开时间
                 if (!__Cashier[curPayingCus.NoC].empty())
                 {
-                    CUS* temp = &__Cashier[curPayingCus.NoC].front();
+                    CUS *temp = &__Cashier[curPayingCus.NoC].front();
                     temp->paying = curPayingCus.leave;
                     temp->leave.mins = temp->paying.mins + 3;
                     temp->leave.sec = curPayingCus.leave.sec;
@@ -167,14 +169,13 @@ void updataPerMinute(TIME* time, CUS* cus)
             }
         }
 
-
         updataTime[i].printTime();
         printf("\r\n"); //可在此处输出其他数据
     }
     time->mins++;
 }
 
-void timeTable(TIME* time, CUS* cus)
+void timeTable(TIME *time, CUS *cus)
 {
     uint32_t simulTimes = 60; //经过分钟数
     for (int i = 0; i < simulTimes; i++)
@@ -186,8 +187,8 @@ void timeTable(TIME* time, CUS* cus)
 int main()
 {
     srand((unsigned int)time(NULL));
-    TIME* time = new TIME;
-    CUS* cus = new CUS[120];
+    TIME *time = new TIME;
+    CUS *cus = new CUS[120];
     timeTable(time, cus);
     system("pause");
 }
