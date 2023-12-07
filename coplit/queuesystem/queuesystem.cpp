@@ -3,6 +3,7 @@ using namespace std;
 #include <vector>
 #include <queue>
 #include <ctime>
+#include <iomanip>
 #include <limits.h>
 
 uint32_t __mark = 0;
@@ -108,18 +109,22 @@ void swapTime(Time &time1, Time &time2)
 
 void printEnterCus(Customer cus, vector<queue<Customer>> *cashier)
 {
+    cout << setw(6);
     cus->m_enter.printTime();
-    cout << "          ";
-    printf("%u", cus->m_num);
-    printf("      所在柜台：%u    柜台人数：%u", cus->m_NoC, (*cashier)[cus->m_NoC].size());
+    cout << setw(12) << cus->m_num << setw(20) << "入队" << setw(12) << cus->m_NoC << setw(22) << (*cashier)[cus->m_NoC].size() << setw(20)
+         << 0 << endl;
 }
 
 void printLeaveCus(Customer cus, vector<queue<Customer>> *cashier)
 {
+    cout << setw(6);
     cus->m_leave.printTime();
-    cout << "          ";
-    printf("%u   出队", cus->m_num);
-    printf("所在柜台：%u    柜台人数：%u", cus->m_NoC, (*cashier)[cus->m_NoC].size());
+    uint32_t Waiting = (cus->m_leave.m_minu * 60 + cus->m_leave.m_secn) - (cus->m_enter.m_minu * 60 + cus->m_enter.m_secn);
+    uint32_t WaitingM = Waiting / 60;
+    uint32_t WaitingS = Waiting % 60;
+
+    cout << setw(12) << cus->m_num << setw(20) << "出队" << setw(12) << cus->m_NoC << setw(22) << (*cashier)[cus->m_NoC].size() << setw(20)
+         << WaitingM << "分" << WaitingS << "秒" << endl;
 }
 
 uint32_t getShortest(vector<queue<Customer>> *cashier)
@@ -608,6 +613,7 @@ void test_unit1()
     queue<Customer> *Q = new queue<Customer>;
     vector<queue<Customer>> *Cashier = new vector<queue<Customer>>(6);
     Time time;
+    cout << setw(6) << "时间" << setw(18) << "顾客编号" << setw(14) << "状态" << setw(16) << "收银台编号" << setw(20) << "收银台人数" << setw(18) << "等待时间" << endl;
     for (int i = 0; i < 60; i++)
     {
         enterCashier(Cashier, Q, time);
