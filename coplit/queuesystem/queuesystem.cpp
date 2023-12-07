@@ -151,8 +151,8 @@ uint32_t getShortest(vector<queue<Customer>> *cashier)
     //最小队列不止一个 比较队头的paying时间，进入paying早的队列
     if (count > 1)
     {
-        int earlist = 0;
-        for (int i = 0; i < count - 1; i++)
+        int earlist = arr[0];
+        for (int i = 0; i < count; i++)
         {
             //获取队列头部付款区最早的下标
             if ((*cashier)[arr[i]].empty())
@@ -160,19 +160,17 @@ uint32_t getShortest(vector<queue<Customer>> *cashier)
                 earlist = arr[i];
                 break;
             }
-            Time time1 = (*cashier)[arr[i]].front()->m_paying;
-            Time time2 = (*cashier)[arr[i + 1]].front()->m_paying;
-            if (time1 <= time2)
+
+            Time time1 = (*cashier)[earlist].front()->m_paying;
+            Time time2 = (*cashier)[arr[i]].front()->m_paying;
+            if (time1 > time2)
             {
                 earlist = arr[i];
-            }
-            else
-            {
-                earlist = arr[i + 1];
             }
         }
         return earlist;
     }
+
     return shortestSign;
 }
 
@@ -229,24 +227,49 @@ void enterCashier(vector<queue<Customer>> *cashier, queue<Customer> *q, Time &ti
     bool flag2 = false;
     //队列不为空 且离队分钟与当前分钟相同
 
-    // cout << "测试用" << q->front()->m_enter.m_minu << ":";
-    // cout << q->front()->m_enter.m_secn << endl;
-    // cout << "测试用" << q->front()->m_leave.m_minu << ":";
+    // cout << "队头：测试用" << q->front()->m_enter.m_minu << ":";
+    // cout << q->front()->m_enter.m_secn <<"   编号" <<q->front()->m_num<<"   所在柜台"<<q->front()->m_NoC << endl;
+    // cout << "队头：测试用" << q->front()->m_leave.m_minu << ":";
+    // cout << q->front()->m_paying.m_secn << endl;
+    // cout << "队头：测试用" << q->front()->m_leave.m_minu << ":";
     // cout << q->front()->m_leave.m_secn << endl;
 
+    // cout << "队尾：测试用" << q->back()->m_enter.m_minu << ":";
+    // cout << q->back()->m_enter.m_secn << endl;
+    // cout << "队尾：测试用" << q->back()->m_leave.m_minu << ":";
+    // cout << q->back()->m_leave.m_secn << "   编号" << q->back()->m_num << "   所在柜台" << q->back()->m_NoC << endl;
+    int count = 0;
     while ((!q->empty()) && (q->front()->m_leave.m_minu == arr[0]->m_enter.m_minu))
     {
         // L开头
         if (flag1 == false && q->front()->m_leave <= arr[0]->m_enter)
         {
+
             flag1 = true;
+            if (count == 2)
+            {
+                break;
+            }
+            count++;
+
             Customer temp = q->front();
             q->pop();
             (*cashier)[temp->m_NoC].pop();
             if (!(*cashier)[temp->m_NoC].empty())
             {
-                (*cashier)[temp->m_NoC].front()->m_leave = temp->m_leave + 3;
-                q->push((*cashier)[temp->m_NoC].front());
+                //进入时，队头元素已经离开
+                if ((*cashier)[temp->m_NoC].front()->m_enter > temp->m_leave)
+                {
+                    (*cashier)[temp->m_NoC].front()->m_paying = (*cashier)[temp->m_NoC].front()->m_enter;
+                    (*cashier)[temp->m_NoC].front()->m_leave = ((*cashier)[temp->m_NoC].front()->m_paying + 3);
+                    q->push((*cashier)[temp->m_NoC].front());
+                }
+                else
+                {
+                    (*cashier)[temp->m_NoC].front()->m_paying = temp->m_leave;
+                    (*cashier)[temp->m_NoC].front()->m_leave = ((*cashier)[temp->m_NoC].front()->m_paying + 3);
+                    q->push((*cashier)[temp->m_NoC].front());
+                }
             }
 
             printLeaveCus(temp, cashier);
@@ -258,13 +281,30 @@ void enterCashier(vector<queue<Customer>> *cashier, queue<Customer> *q, Time &ti
         // LLEE
         if (flag1 == true && q->front()->m_leave <= arr[0]->m_enter)
         {
+            if (count == 2)
+            {
+                break;
+            }
+            count++;
             Customer temp = q->front();
             q->pop();
             (*cashier)[temp->m_NoC].pop();
             if (!(*cashier)[temp->m_NoC].empty())
             {
-                (*cashier)[temp->m_NoC].front()->m_leave = temp->m_leave + 3;
-                q->push((*cashier)[temp->m_NoC].front());
+
+                //进入时，队头元素已经离开
+                if ((*cashier)[temp->m_NoC].front()->m_enter > temp->m_leave)
+                {
+                    (*cashier)[temp->m_NoC].front()->m_paying = (*cashier)[temp->m_NoC].front()->m_enter;
+                    (*cashier)[temp->m_NoC].front()->m_leave = ((*cashier)[temp->m_NoC].front()->m_paying + 3);
+                    q->push((*cashier)[temp->m_NoC].front());
+                }
+                else
+                {
+                    (*cashier)[temp->m_NoC].front()->m_paying = temp->m_leave;
+                    (*cashier)[temp->m_NoC].front()->m_leave = ((*cashier)[temp->m_NoC].front()->m_paying + 3);
+                    q->push((*cashier)[temp->m_NoC].front());
+                }
             }
             printLeaveCus(temp, cashier);
             printf("\r\n");
@@ -284,14 +324,29 @@ void enterCashier(vector<queue<Customer>> *cashier, queue<Customer> *q, Time &ti
                  q->front()->m_leave >= arr[0]->m_enter &&
                  q->front()->m_leave <= arr[1]->m_enter)
         {
-
+            if (count == 2)
+            {
+                break;
+            }
+            count++;
             Customer temp = q->front();
             q->pop();
             (*cashier)[temp->m_NoC].pop();
             if (!(*cashier)[temp->m_NoC].empty())
             {
-                (*cashier)[temp->m_NoC].front()->m_leave = temp->m_leave + 3;
-                q->push((*cashier)[temp->m_NoC].front());
+                //进入时，队头元素已经离开
+                if ((*cashier)[temp->m_NoC].front()->m_enter > temp->m_leave)
+                {
+                    (*cashier)[temp->m_NoC].front()->m_paying = (*cashier)[temp->m_NoC].front()->m_enter;
+                    (*cashier)[temp->m_NoC].front()->m_leave = ((*cashier)[temp->m_NoC].front()->m_paying + 3);
+                    q->push((*cashier)[temp->m_NoC].front());
+                }
+                else
+                {
+                    (*cashier)[temp->m_NoC].front()->m_paying = temp->m_leave;
+                    (*cashier)[temp->m_NoC].front()->m_leave = ((*cashier)[temp->m_NoC].front()->m_paying + 3);
+                    q->push((*cashier)[temp->m_NoC].front());
+                }
             }
 
             printEnterCus(arr[0], cashier); //改了此处
@@ -310,13 +365,29 @@ void enterCashier(vector<queue<Customer>> *cashier, queue<Customer> *q, Time &ti
         // LEEL
         if (flag1 == true && q->front()->m_leave >= arr[1]->m_enter)
         {
+            if (count == 2)
+            {
+                break;
+            }
+            count++;
             Customer temp = q->front();
             q->pop();
             (*cashier)[temp->m_NoC].pop();
             if (!(*cashier)[temp->m_NoC].empty())
             {
-                (*cashier)[temp->m_NoC].front()->m_leave = temp->m_leave + 3;
-                q->push((*cashier)[temp->m_NoC].front());
+                //进入时，队头元素已经离开
+                if ((*cashier)[temp->m_NoC].front()->m_enter > temp->m_leave)
+                {
+                    (*cashier)[temp->m_NoC].front()->m_paying = (*cashier)[temp->m_NoC].front()->m_enter;
+                    (*cashier)[temp->m_NoC].front()->m_leave = ((*cashier)[temp->m_NoC].front()->m_paying + 3);
+                    q->push((*cashier)[temp->m_NoC].front());
+                }
+                else
+                {
+                    (*cashier)[temp->m_NoC].front()->m_paying = temp->m_leave;
+                    (*cashier)[temp->m_NoC].front()->m_leave = ((*cashier)[temp->m_NoC].front()->m_paying + 3);
+                    q->push((*cashier)[temp->m_NoC].front());
+                }
             }
 
             printEnterCus(arr[0], cashier); //改了此处
@@ -334,62 +405,78 @@ void enterCashier(vector<queue<Customer>> *cashier, queue<Customer> *q, Time &ti
             return;
         }
 
-        // E开头
+        // E开头 EL
         if (flag1 == false && flag2 == false &&
             q->front()->m_leave >= arr[0]->m_enter &&
             q->front()->m_leave <= arr[1]->m_enter)
-        { // ELLE
+        {
 
             flag2 = true;
+            if (count == 2)
+            {
+                break;
+            }
+            count++;
             Customer temp = q->front();
             q->pop();
             (*cashier)[temp->m_NoC].pop();
             if (!(*cashier)[temp->m_NoC].empty())
             {
-                (*cashier)[temp->m_NoC].front()->m_leave = temp->m_leave + 3;
-                q->push((*cashier)[temp->m_NoC].front());
+                //进入时，队头元素已经离开
+                if ((*cashier)[temp->m_NoC].front()->m_enter > temp->m_leave)
+                {
+                    (*cashier)[temp->m_NoC].front()->m_paying = (*cashier)[temp->m_NoC].front()->m_enter;
+                    (*cashier)[temp->m_NoC].front()->m_leave = ((*cashier)[temp->m_NoC].front()->m_paying + 3);
+                    q->push((*cashier)[temp->m_NoC].front());
+                }
+                else
+                {
+                    (*cashier)[temp->m_NoC].front()->m_paying = temp->m_leave;
+                    (*cashier)[temp->m_NoC].front()->m_leave = ((*cashier)[temp->m_NoC].front()->m_paying + 3);
+                    q->push((*cashier)[temp->m_NoC].front());
+                }
             }
 
             printEnterCus(arr[0], cashier); //改了此处
             printf("\r\n");
-
-            printLeaveCus(temp, cashier);
-            printf("\r\n");
             // delete temp;
             // temp = nullptr;
+            printLeaveCus(temp, cashier);
+            printf("\r\n");
         }
         // ELLE
         if (flag2 == true &&
             q->front()->m_leave >= arr[0]->m_enter &&
             q->front()->m_leave <= arr[1]->m_enter)
         {
-
+            if (count == 2)
+            {
+                break;
+            }
+            count++;
             Customer temp = q->front();
             q->pop();
             (*cashier)[temp->m_NoC].pop();
             if (!(*cashier)[temp->m_NoC].empty())
             {
-                (*cashier)[temp->m_NoC].front()->m_leave = temp->m_leave + 3;
-                q->push((*cashier)[temp->m_NoC].front());
+                //进入时，队头元素已经离开
+                if ((*cashier)[temp->m_NoC].front()->m_enter > temp->m_leave)
+                {
+                    (*cashier)[temp->m_NoC].front()->m_paying = (*cashier)[temp->m_NoC].front()->m_enter;
+                    (*cashier)[temp->m_NoC].front()->m_leave = ((*cashier)[temp->m_NoC].front()->m_paying + 3);
+                    q->push((*cashier)[temp->m_NoC].front());
+                }
+                else
+                {
+                    (*cashier)[temp->m_NoC].front()->m_paying = temp->m_leave;
+                    (*cashier)[temp->m_NoC].front()->m_leave = ((*cashier)[temp->m_NoC].front()->m_paying + 3);
+                    q->push((*cashier)[temp->m_NoC].front());
+                }
             }
             printLeaveCus(temp, cashier);
             printf("\r\n");
             // delete temp;
             // temp = nullptr;
-
-            if (!q->empty())
-            {
-                temp = q->front();
-                q->pop();
-                (*cashier)[temp->m_NoC].pop();
-                if (!(*cashier)[temp->m_NoC].empty())
-                {
-                    (*cashier)[temp->m_NoC].front()->m_leave = temp->m_leave + 3;
-                    q->push((*cashier)[temp->m_NoC].front());
-                }
-                printLeaveCus(temp, cashier);
-                printf("\r\n");
-            }
 
             printEnterCus(arr[1], cashier); //改了此处
             printf("\r\n");
@@ -402,13 +489,29 @@ void enterCashier(vector<queue<Customer>> *cashier, queue<Customer> *q, Time &ti
         // ELEL
         else if (flag2 == true && q->front()->m_leave >= arr[1]->m_enter)
         {
+            if (count == 2)
+            {
+                break;
+            }
+            count++;
             Customer temp = q->front();
             q->pop();
             (*cashier)[temp->m_NoC].pop();
             if (!(*cashier)[temp->m_NoC].empty())
             {
-                (*cashier)[temp->m_NoC].front()->m_leave = temp->m_leave + 3;
-                q->push((*cashier)[temp->m_NoC].front());
+                //进入时，队头元素已经离开
+                if ((*cashier)[temp->m_NoC].front()->m_enter > temp->m_leave)
+                {
+                    (*cashier)[temp->m_NoC].front()->m_paying = (*cashier)[temp->m_NoC].front()->m_enter;
+                    (*cashier)[temp->m_NoC].front()->m_leave = ((*cashier)[temp->m_NoC].front()->m_paying + 3);
+                    q->push((*cashier)[temp->m_NoC].front());
+                }
+                else
+                {
+                    (*cashier)[temp->m_NoC].front()->m_paying = temp->m_leave;
+                    (*cashier)[temp->m_NoC].front()->m_leave = ((*cashier)[temp->m_NoC].front()->m_paying + 3);
+                    q->push((*cashier)[temp->m_NoC].front());
+                }
             }
 
             printEnterCus(arr[0], cashier); //改了此处
@@ -423,18 +526,35 @@ void enterCashier(vector<queue<Customer>> *cashier, queue<Customer> *q, Time &ti
         // EELL
         if (flag1 == false && flag2 == false && q->front()->m_leave >= arr[1]->m_enter)
         {
+            if (count == 2)
+            {
+                break;
+            }
+            count++;
             for (int i = 0; i < 2; i++)
             {
                 printEnterCus(arr[i], cashier);
                 printf("\r\n");
             }
+
             Customer temp = q->front();
             q->pop();
             (*cashier)[temp->m_NoC].pop();
             if (!(*cashier)[temp->m_NoC].empty())
             {
-                (*cashier)[temp->m_NoC].front()->m_leave = temp->m_leave + 3;
-                q->push((*cashier)[temp->m_NoC].front());
+                //进入时，队头元素已经离开
+                if ((*cashier)[temp->m_NoC].front()->m_enter > temp->m_leave)
+                {
+                    (*cashier)[temp->m_NoC].front()->m_paying = (*cashier)[temp->m_NoC].front()->m_enter;
+                    (*cashier)[temp->m_NoC].front()->m_leave = ((*cashier)[temp->m_NoC].front()->m_paying + 3);
+                    q->push((*cashier)[temp->m_NoC].front());
+                }
+                else
+                {
+                    (*cashier)[temp->m_NoC].front()->m_paying = temp->m_leave;
+                    (*cashier)[temp->m_NoC].front()->m_leave = ((*cashier)[temp->m_NoC].front()->m_paying + 3);
+                    q->push((*cashier)[temp->m_NoC].front());
+                }
             }
             printLeaveCus(temp, cashier);
             printf("\r\n");
@@ -448,8 +568,19 @@ void enterCashier(vector<queue<Customer>> *cashier, queue<Customer> *q, Time &ti
                 (*cashier)[temp->m_NoC].pop();
                 if (!(*cashier)[temp->m_NoC].empty())
                 {
-                    (*cashier)[temp->m_NoC].front()->m_leave = temp->m_leave + 3;
-                    q->push((*cashier)[temp->m_NoC].front());
+                    //进入时，队头元素已经离开
+                    if ((*cashier)[temp->m_NoC].front()->m_enter > temp->m_leave)
+                    {
+                        (*cashier)[temp->m_NoC].front()->m_paying = (*cashier)[temp->m_NoC].front()->m_enter;
+                        (*cashier)[temp->m_NoC].front()->m_leave = ((*cashier)[temp->m_NoC].front()->m_paying + 3);
+                        q->push((*cashier)[temp->m_NoC].front());
+                    }
+                    else
+                    {
+                        (*cashier)[temp->m_NoC].front()->m_paying = temp->m_leave;
+                        (*cashier)[temp->m_NoC].front()->m_leave = ((*cashier)[temp->m_NoC].front()->m_paying + 3);
+                        q->push((*cashier)[temp->m_NoC].front());
+                    }
                 }
                 printLeaveCus(temp, cashier);
                 printf("\r\n");
@@ -475,7 +606,7 @@ void enterCashier(vector<queue<Customer>> *cashier, queue<Customer> *q, Time &ti
 void test_unit1()
 {
     queue<Customer> *Q = new queue<Customer>;
-    vector<queue<Customer>> *Cashier = new vector<queue<Customer>>(4);
+    vector<queue<Customer>> *Cashier = new vector<queue<Customer>>(6);
     Time time;
     for (int i = 0; i < 60; i++)
     {
