@@ -519,7 +519,7 @@ void enterCashier(vector<queue<Customer>> *cashier, queue<Customer> *q, Time &ti
                 }
             }
 
-            printEnterCus(arr[0], cashier); //改了此处
+            printEnterCus(arr[1], cashier); //改了此处
             printf("\r\n");
 
             printLeaveCus(temp, cashier);
