@@ -7,8 +7,8 @@
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
-              //  "${fileDirname}\\*.cpp",
-              "*.cpp",
+                "${fileDirname}\\*.cpp",
+              //"*.cpp",
                 "-o",
                 "${fileDirname}\\a.exe"
             ],
