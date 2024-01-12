@@ -17,11 +17,12 @@ typedef unsigned float_bits;
  */
 int bits_length(int i)
 {
+    //符号位为1则返回32
     if ((i & INT_MIN) != 0)
     {
         return 32;
     }
-
+    //符号位为0，获取位长度
     unsigned u = (unsigned)i;
     int length = 0;
     while (u >= (1 << length))
@@ -39,6 +40,8 @@ int bits_length(int i)
  * 3  => 0x00000007
  * 16 => 0x0000FFFF
  */
+
+//生成掩码的函数
 unsigned bits_mask(int l)
 {
     return (unsigned)-1 >> (32 - l);
@@ -47,6 +50,8 @@ unsigned bits_mask(int l)
 /*
  * Compute (float) i
  */
+
+//将int转换为浮点的函数
 float_bits float_i2f(int i)
 {
     unsigned sig, exp, frac, rest, exp_sig /* except sig */, round_part;
@@ -60,8 +65,10 @@ float_bits float_i2f(int i)
         frac = 0;
         return sig << 31 | exp << 23 | frac;
     }
+    //因为INT_MIN没有-i，所以需要拿出来单独处理
     if (i == INT_MIN)
     {
+        //1000 ... 0000
         sig = 1;
         exp = bias + 31;
         frac = 0;
@@ -70,6 +77,8 @@ float_bits float_i2f(int i)
 
     sig = 0;
     /* 2's complatation */
+
+    //对i的绝对值进行操作
     if (i < 0)
     {
         sig = 1;
@@ -77,10 +86,12 @@ float_bits float_i2f(int i)
     }
 
     bits = bits_length(i);
+    //规格化值，省去了一个1
     fbits = bits - 1;
     exp = bias + fbits;
 
     rest = i & bits_mask(fbits);
+
     if (fbits <= 23)
     {
         frac = rest << (23 - fbits);
@@ -89,6 +100,7 @@ float_bits float_i2f(int i)
     else
     {
         int offset = fbits - 23;
+        
         int round_mid = 1 << (offset - 1);
 
         round_part = rest & bits_mask(offset);
