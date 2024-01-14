@@ -42,7 +42,7 @@ int float_f2i(float_bits f){
 int float_f2i_anwser(float_bits f){
     //exp: 0~bias 都小于1 结果取0
     //exp: >=31+bias int会溢出 
-    //exp: >23+bias && <31+bias frac全部会可以被左移
+    //exp: >23+bias && <31+bias frac全部可以被左移
     //exp: <23+bias frac部分被左移
     unsigned sig=f>>31;
     unsigned exp = f >> 23 & 0xff;
@@ -59,7 +59,7 @@ int float_f2i_anwser(float_bits f){
         num = 0x80000000;
     }else{
         E = exp - bias;
-        M = frac | 0x8000000;
+        M = frac | 0x800000;
         if(E>23){
             num = M << (E - 23);
         }else{
