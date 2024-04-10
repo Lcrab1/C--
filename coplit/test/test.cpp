@@ -1,124 +1,112 @@
-#include <iostream>
-#include <limits>
-int isAsciiDigit(int x)
+BOOL CIocpServer::ServerRun(USHORT ListenPort)
 {
-    //考虑不到高24位
-    // int secondNum = (x >> 4&0xf);
-    // int isHex1 = !(secondNum^0x3);//精确值
-    // int isHex2 = !!((((x & 0xA) ^ 0xA)) | ((x & 0xC) ^ 0xC));   //范围
-    // return isHex1 & isHex2;
 
-    int secondNum = (x >> 4);
-    int isHex1 = !(secondNum ^ 0x3);                              //精确值
-    int isHex2 = (!!(((x & 0xA) ^ 0xA)) & (!!((x & 0xC) ^ 0xC))); //范围
-    return isHex1 & isHex2;
-}
-int conditional(int x, int y, int z)
-{
-    int a = !!x;
-    a = (a << 31) >> 31;
-    return (a & y) | (~a & z);
-}
+    BOOL IsOk = TRUE;          //绑定套接
+    SOCKADDR_IN ServerAddress; //结构体
 
-int isLessOrEqual(int x, int y)
-{
-    int int_min = 1 << 31;
-    int xisMin = !(x ^ int_min);
-    int yisMax = !(y ^ (~int_min));
-    int yisNotMin = !!(y ^ int_min);
-    int xNotMax = !!(x ^ (~int_min));
-    int isEqual = !((x + (~y + 1)) ^ 0);         // x=y时，isEqual为1，否则为0
-    int isLess = (((x + (~y + 1)) >> 31) & 0x1); // x<y时 isLess为1 否则为0
-    return isEqual | (isLess & xNotMax & yisNotMin) | xisMin | yisMax;
-}
+    //创建事件对象 最后一个参数表示事件的名称,传入NULL代表传入的是一个匿名对象
+    // Kernel32.dll
+    m_KillEventHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
 
-unsigned floatScale2(unsigned uf)
-{
-    unsigned sig = uf >> 31;
-    unsigned exp = (uf >> 23) & 0xff;
-    unsigned mask = (0x7 << 20) | (0xff << 12) | (0xff << 4) | (0xf);
-    unsigned frac = uf & mask;
-    unsigned bias = 0x7f;
-    int isExpZero = !(exp ^ 0x0);
-    int isFracZero = !(frac ^ 0x0);
-    // NaN Infi
-    unsigned NaN_or_Infi = !(exp ^ 0xff);
-
-    if (NaN_or_Infi)
-        return uf;
-
-    // 0
-    if (isExpZero && isFracZero)
+    if (m_KillEventHandle == NULL)
     {
-        return sig << 31;
+        return FALSE;
     }
-    // exp==0
-    if (isExpZero && (!isFracZero))
-    {
-        frac <<= 1;
-        return sig << 31 | exp << 23 | frac;
-    }
-    // exp!=0
-    exp = exp + 1;
-    unsigned res = sig << 31 | exp << 23 | frac;
-    return res;
-}
 
-int floatFloat2Int(unsigned uf)
-{
-    unsigned bias = 0x7f;
-    unsigned sig = uf >> 31;
-    int exp = uf >> 23 & 0xff;
-    unsigned frac = uf & 0x7fffff;
-    int E = exp - bias;
-    unsigned M;
-    int num;
-    // NaN and Infi
-    unsigned NaNorInfi = !(exp ^ 0xff);
-    // exp<bias+0 1.xxxxxx  直接返回0
+    //创建一个监听事件
+    m_listenSocket = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED); //重叠 异步Io  CPU
+    if (m_listenSocket == INVALID_SOCKET)
+    {
+        IsOk = FALSE;
+        goto Error;
+    }
 
-    // bias+23<=exp<bias+31 frac可以完全被移位，并且int不会溢出
-    // bias+31<=exp int会溢出
-    // bias+0<=exp<bias+23  部分frac可以被移位
-    if (NaNorInfi)
+    // WSA开头  创建一个网络的事件
+    // Ws2_32.dll
+    m_ListenEventHandle = WSACreateEvent(); // NULL true,false NULL
+    // The WSACreateEvent function creates a manual-reset event object with an initial state of nonsignaled.
+    //创建一个监听事件(网络代码)(Ws2_32.dll)
+
+    if (m_ListenEventHandle == WSA_INVALID_EVENT)
     {
-        num = 0x80000000u;
+        IsOk = FALSE;
+        goto Error;
     }
-    else if (E < 0)
+
+    //将监听套接字与事件进行关联并授予FD_ACCEPT与的FD_CLOSE属性
+    BOOL ConnectOk = WSAEventSelect(m_listenSocket,
+                                    m_ListenEventHandle,
+                                    FD_ACCEPT | FD_CLOSE);
+    /*FD_ACCEPT表示有新的连接请求，FD_CLOSE表示连接已经关闭。
+    当这些事件中的任何一个发生时，m_ListenEventHandle事件对象就会被设置为信号状态。*/
+
+    if (ConnectOk == SOCKET_ERROR)
     {
-        num = 0;
+        IsOk = FALSE;
+        goto Error;
     }
-    else if (E >= 31)
+
+    //初始化Server端网卡
+
+    //通信端口 0 - 2^16-1
+    // Http:超文本传输协议  80
+
+    ServerAddress.sin_port = htons(ListenPort); // host to net String ini 文件设置的监听端口撸进结构中
+    ServerAddress.sin_family = AF_INET;
+    ServerAddress.sin_addr.s_addr = INADDR_ANY;
+    // ServerAddress.sin_addr.S_un.S_addr = INADDR_ANY;  //IP地址
+    // INADDR_ANY是一个特殊的宏常量，表示绑定到所有可用的网络接口上。
+
+    //绑定套接字
+    //套接字与网卡关联
+
+    //将服务器监听套接字与指定的 IP 地址和端口号绑定在一起
+    BOOL bindOk = bind(m_listenSocket,
+                       (sockaddr *)&ServerAddress,
+                       sizeof(ServerAddress));
+
+    if (bindOk == SOCKET_ERROR)
     {
-        num = 0x80000000u;
+        IsOk = FALSE;
+        goto Error;
     }
-    else
+
+    //保安上班监听
+    //将服务器的监听套接字置为监听状态
+    BOOL listenOk = listen(m_listenSocket, SOMAXCONN); //监听能力
+    if (listenOk == SOCKET_ERROR)
     {
-        //相当于1.xxxx直接变成1xxxx 即已经移了23位了
-        M = frac | 0x800000;
-        if (E >= 23)
+        IsOk = FALSE;
+        goto Error;
+    }
+
+    //创建监听线程
+    m_ListenThreadHandle =
+        (HANDLE)CreateThread(NULL,
+                             0,
+                             (LPTHREAD_START_ROUTINE)ListenThreadProcedure,
+                             (void *)this, //向Thread回调函数传入this 方便我们的线程回调访问类中的成员
+                             0,
+                             NULL);
+
+    if (m_ListenThreadHandle == INVALID_HANDLE_VALUE)
+    {
+        IsOk = FALSE;
+        goto Error;
+    }
+
+    IocpInit();
+    return TRUE;
+
+Error:
+
+    if (IsOk == FALSE)
+    {
+        if (m_listenSocket != INVALID_SOCKET)
         {
-            //所以如果E大于23，那么移动的位数不够，还需要再左移E-23位
-            num = M << (E - 23);
-        }
-        else
-        {
-            //如果E小于23，那么此时移动的多了，还要右移(23-E)位，把多左移的位右移回来
-            num = M >> (23 - E);
+            closesocket(m_listenSocket);
+            m_listenSocket = INVALID_SOCKET;
         }
     }
-    if (sig)
-    {
-        return -num;
-    }
-    else
-    {
-        return num;
-    }
-}
-int main()
-{
-    int x = 0x3f800000;
-    int a = floatFloat2Int(x);
-    system("pause");
+    return 0;
 }

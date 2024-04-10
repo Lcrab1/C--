@@ -1,0 +1,12 @@
+#include<iostream>
+#include<string>
+
+
+int main()
+{
+    const char *example = R"(line1
+    line3
+    line4)";
+    std::cout << example << std::endl;
+    system("pause");
+}
